@@ -1,51 +1,79 @@
-# School ERP Data Formatter
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Ehazir Shambles - Data Cleaner</title>
+</head>
+<body>
+	<h1>Ehazir Shambles</h1>
+	<p>A desktop app for cleaning student data, mapping columns, building ERP-ready records, and exporting class-wise files.</p>
 
-Lightweight desktop tool to clean, normalise and export student data into a 19-column ERP-friendly format.
+	<section>
+		<h2>Folder Tour</h2>
+		<table>
+			<tr><th>Folder / File</th><th>What It Is</th></tr>
+			<tr><td><code>apps/data_cleaner_formatter.py</code></td><td>Main source file for the desktop app.</td></tr>
+			<tr><td><code>apps/data_cleaner_exe_app/EhazirShambles.exe</code></td><td>Packaged Windows app you can run without Python.</td></tr>
+			<tr><td><code>apps/data_cleaner_exe_app/ehazirshambles.ico</code></td><td>Application icon used by the EXE.</td></tr>
+			<tr><td><code>apps/data_cleaner_exe_app/EhazirShambles_logo.png</code></td><td>Splash/logo image shown on startup.</td></tr>
+			<tr><td><code>apps/data_cleaner_exe_app/build/</code></td><td>PyInstaller build output used while packaging.</td></tr>
+			<tr><td><code>html/</code></td><td>Supporting HTML assets used in the workspace.</td></tr>
+			<tr><td><code>.git/</code></td><td>Git repository metadata.</td></tr>
+		</table>
+	</section>
 
-## Key Features
-- Auto column detection and manual column mapping UI
-- Format Customizer: per-file DOB parsing (source → desired) and address formatting
-	- Address options: Keep spaces or Remove spaces (radio)
-- Data cleaning rules: duplicate removal, name normalization, phone validation (invalid → empty), DOB defaulting (empty → `0`)
-- Per-class grouping and export to XLSX/CSV; `roll_number` values are concrete and reset starting at 1 per exported file
-- Presets: save/load presets (max 7, FIFO). Inline presets panel supports Load / Rename / Delete
-- Removed features: theme (light/dark) toggle and undo functionality (intentionally removed)
+	<section>
+		<h2>How To Download The EXE</h2>
+		<ol>
+			<li>Open <code>Complete/ehazir/apps/data_cleaner_exe_app/</code>.</li>
+			<li>Download or copy <code>EhazirShambles.exe</code> to your Windows machine.</li>
+			<li>Keep <code>ehazirshambles.ico</code> and <code>EhazirShambles_logo.png</code> in the same folder if you want the branded assets available during rebuilds.</li>
+		</ol>
+		<p>If you are viewing this project on GitHub or another file host, download the <code>EhazirShambles.exe</code> file from that folder and run it directly on Windows.</p>
+	</section>
 
-## Requirements
-- Python 3.9+ (uses virtualenv in repository: `Env1`)
-- Packages: `customtkinter`, `pandas`, `openpyxl`
+	<section>
+		<h2>How To Use The App</h2>
+		<ol>
+			<li>Start the app by double-clicking <code>EhazirShambles.exe</code>.</li>
+			<li>Import a source file in XLSX, XLS, or CSV format.</li>
+			<li>Review the detected columns and adjust mappings if needed.</li>
+			<li>Use the format customizer to set DOB parsing and address handling.</li>
+			<li>Clean the data and check the preview.</li>
+			<li>Configure school details, ERP options, and presets.</li>
+			<li>Separate by class and export the final files.</li>
+		</ol>
+	</section>
 
-Install dependencies (from project root):
+	<section>
+		<h2>Features</h2>
+		<ul>
+			<li>Auto column detection with manual override.</li>
+			<li>DOB conversion and missing DOB fallback to <code>0</code>.</li>
+			<li>Invalid phone numbers are cleared to plain empty values.</li>
+			<li>Class-wise export with roll numbers starting from 1.</li>
+			<li>Preset save/load support with rename and delete actions.</li>
+			<li>Startup splash branding with icon and logo support.</li>
+		</ul>
+	</section>
 
-```powershell
-Env1\Scripts\activate.ps1
-pip install customtkinter pandas openpyxl
-```
+	<section>
+		<h2>Rebuild Requirements</h2>
+		<p>If you want to rebuild the EXE yourself, use the Python environment in <code>Env1</code> and install these packages:</p>
+		<ul>
+			<li><code>customtkinter</code></li>
+			<li><code>pandas</code></li>
+			<li><code>openpyxl</code></li>
+			<li><code>pyinstaller</code> if you want to package the app again</li>
+		</ul>
+	</section>
 
-## Run
-From the project root:
-
-```powershell
-Env1\Scripts\activate.bat   # or Activate.ps1
-python apps\emis_app.py
-```
-
-The app opens a GUI. Typical workflow:
-1. Import a source file (XLSX/CSV)
-2. Step 2 — Map columns and use the *Format Customizer* to set DOB formats and address rules
-3. Step 3 — Data cleaning preview
-4. Step 4 — School settings, save/load presets, generate ERP format
-5. Export per-class files (XLSX/CSV)
-
-## Presets
-- Presets are stored at `~/.school_erp_formatter/presets.json` and limited to 7 entries. When adding the 8th preset, the oldest is removed (FIFO). Use the inline panel in Step 4 to load, rename or delete presets.
-
-## Notes & Troubleshooting
-- If the window does not stay maximized on start, the app attempts a delayed maximize; you can tweak the delay in `apps/emis_app.py` (`after()` call).
-- Preset/setting persistence uses the home directory defined by `Path.home()`.
-
-## License
-This repository contains custom code; adjust licensing as needed.
-
----
-File: [apps/emis_app.py](apps/emis_app.py#L1)
+	<section>
+		<h2>Troubleshooting</h2>
+		<ul>
+			<li>If the app does not maximize correctly, close it and open it again; startup maximize is delayed intentionally.</li>
+			<li>If the splash image does not appear, confirm that <code>EhazirShambles_logo.png</code> is present next to the packaged EXE.</li>
+			<li>If you rebuild the app, make sure the icon and logo are bundled with PyInstaller.</li>
+		</ul>
+	</section>
+</body>
+</html>
