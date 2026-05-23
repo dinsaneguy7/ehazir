@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Class Section File Separator</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- XLSX Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <!-- JSZip -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+
+  <!-- FileSaver -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver/dist/FileSaver.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+
+  <div class="max-w-6xl mx-auto">
+
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+
+      <h1 class="text-3xl font-bold mb-2 text-gray-800">
+        Class Section File Separator
+      </h1>
+
+      <p class="text-gray-600 mb-6">
+        Upload CSV or XLSX file and automatically separate into:
+        <span class="font-semibold">class_section.csv</span>
+        or
+        <span class="font-semibold">class_section.xlsx</span>
+      </p>
+
+      <!-- Upload -->
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+
+        <input
+          type="file"
+          id="fileInput"
+          accept=".csv,.xlsx,.xls"
+          class="hidden"
+        />
+
+        <button
+          onclick="document.getElementById('fileInput').click()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+        >
+          Upload CSV / XLSX
+        </button>
+
+        <p class="text-sm text-gray-500 mt-4">
+          Required columns:
+          <span class="font-medium">class</span> and
+          <span class="font-medium">section</span>
+        </p>
+      </div>
+
+      <!-- Stats -->
+      <div id="stats" class="hidden mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-blue-50 p-5 rounded-xl">
+          <p class="text-gray-500 text-sm">Total Records</p>
+          <h2 id="totalRecords" class="text-2xl font-bold text-blue-700">0</h2>
+        </div>
+
+        <div class="bg-green-50 p-5 rounded-xl">
+          <p class="text-gray-500 text-sm">Separated Files</p>
+          <h2 id="totalFiles" class="text-2xl font-bold text-green-700">0</h2>
+        </div>
+
+        <div class="bg-purple-50 p-5 rounded-xl">
+          <p class="text-gray-500 text-sm">Output Format</p>
+          <h2 id="outputFormat" class="text-2xl font-bold text-purple-700">CSV</h2>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div id="controls" class="hidden mt-8 flex flex-wrap gap-4">
+
+        <select
+          id="exportType"
+          class="border border-gray-300 rounded-lg px-4 py-2"
+        >
+          <option value="csv">Export as CSV</option>
+          <option value="xlsx">Export as XLSX</option>
+        </select>
+
+        <button
+          onclick="downloadAllZip()"
+          class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-semibold"
+        >
+          Download All as ZIP
+        </button>
+
+      </div>
+
+      <!-- File List -->
+      <div id="fileContainer" class="hidden mt-8">
+
+        <h2 class="text-xl font-bold mb-4 text-gray-800">
+          Generated Files
+        </h2>
+
+        <div
+          id="fileList"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        ></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+
+let groupedData = {};
+let headers = [];
+let originalData = [];
+
+document.getElementById('fileInput').addEventListener('change', handleFile);
+
+async function handleFile(event) {
+
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const extension = file.name.split('.').pop().toLowerCase();
+
+  let jsonData = [];
+
+  if (extension === 'csv') {
+    const text = await file.text();
+    jsonData = csvToJson(text);
+  } else {
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    jsonData = XLSX.utils.sheet_to_json(sheet);
+  }
+
+  if (!jsonData.length) {
+    alert("No data found.");
+    return;
+  }
+
+  originalData = jsonData;
+  headers = Object.keys(jsonData[0]);
+
+  const classKey = findColumn(headers, ['class', 'grade']);
+  const sectionKey = findColumn(headers, ['section', 'sec']);
+
+  if (!classKey || !sectionKey) {
+    alert("Could not find CLASS or SECTION columns.");
+    return;
+  }
+
+  groupedData = {};
+
+  jsonData.forEach(row => {
+
+    const className = sanitize(String(row[classKey] || 'unknown'));
+    const sectionName = sanitize(String(row[sectionKey] || 'unknown'));
+
+    const filename = `${className}_${sectionName}`;
+
+    if (!groupedData[filename]) {
+      groupedData[filename] = [];
+    }
+
+    groupedData[filename].push(row);
+
+  });
+
+  renderFiles();
+
+}
+
+function renderFiles() {
+
+  document.getElementById('stats').classList.remove('hidden');
+  document.getElementById('controls').classList.remove('hidden');
+  document.getElementById('fileContainer').classList.remove('hidden');
+
+  document.getElementById('totalRecords').innerText = originalData.length;
+  document.getElementById('totalFiles').innerText = Object.keys(groupedData).length;
+
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+
+  Object.keys(groupedData).forEach(filename => {
+
+    const card = document.createElement('div');
+
+    card.className = `
+      bg-white border border-gray-200 rounded-xl p-5 shadow-sm
+    `;
+
+    card.innerHTML = `
+      <h3 class="font-bold text-lg text-gray-800">
+        ${filename}
+      </h3>
+
+      <p class="text-gray-500 text-sm mt-1">
+        ${groupedData[filename].length} records
+      </p>
+
+      <button
+        class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold"
+        onclick="downloadSingle('${filename}')"
+      >
+        Download
+      </button>
+    `;
+
+    list.appendChild(card);
+
+  });
+
+}
+
+function downloadSingle(filename) {
+
+  const type = document.getElementById('exportType').value;
+  document.getElementById('outputFormat').innerText = type.toUpperCase();
+
+  const rows = groupedData[filename];
+
+  if (type === 'csv') {
+
+    const csv = convertToCSV(rows);
+
+    const blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    saveAs(blob, `${filename}.csv`);
+
+  } else {
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+    XLSX.writeFile(workbook, `${filename}.xlsx`);
+
+  }
+
+}
+
+async function downloadAllZip() {
+
+  const zip = new JSZip();
+
+  const type = document.getElementById('exportType').value;
+  document.getElementById('outputFormat').innerText = type.toUpperCase();
+
+  for (const filename in groupedData) {
+
+    const rows = groupedData[filename];
+
+    if (type === 'csv') {
+
+      const csv = convertToCSV(rows);
+
+      zip.file(`${filename}.csv`, csv);
+
+    } else {
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array'
+      });
+
+      zip.file(`${filename}.xlsx`, excelBuffer);
+
+    }
+
+  }
+
+  const content = await zip.generateAsync({
+    type: 'blob'
+  });
+
+  saveAs(content, 'separated_files.zip');
+
+}
+
+function csvToJson(csv) {
+
+  const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+
+  const headers = lines[0].split(',').map(h => h.trim());
+
+  const result = [];
+
+  for (let i = 1; i < lines.length; i++) {
+
+    const obj = {};
+    const currentline = lines[i].split(',');
+
+    headers.forEach((header, index) => {
+      obj[header] = currentline[index] || '';
+    });
+
+    result.push(obj);
+
+  }
+
+  return result;
+
+}
+
+function convertToCSV(data) {
+
+  if (!data.length) return '';
+
+  const headers = Object.keys(data[0]);
+
+  const csvRows = [];
+
+  csvRows.push(headers.join(','));
+
+  data.forEach(row => {
+
+    const values = headers.map(header => {
+
+      const value = row[header] ?? '';
+
+      return `"${String(value).replace(/"/g, '""')}"`;
+
+    });
+
+    csvRows.push(values.join(','));
+
+  });
+
+  return csvRows.join('\n');
+
+}
+
+function sanitize(text) {
+
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
+
+}
+
+function findColumn(headers, possibleNames) {
+
+  for (const header of headers) {
+
+    const normalized = header.toLowerCase().trim();
+
+    for (const name of possibleNames) {
+
+      if (normalized.includes(name)) {
+        return header;
+      }
+
+    }
+
+  }
+
+  return null;
+
+}
+
+</script>
+
+</body>
+</html>
