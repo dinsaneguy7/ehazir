@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║          School ERP Data Formatter  v1.0.0                       ║
+║               Ehazir Shambles  v1.0.0                            ║
 ║  Modern school data cleaning, ERP formatting & class-wise        ║
 ║  export desktop software built with Python + CustomTkinter        ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -29,9 +29,11 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-APP_NAME    = "School ERP Data Formatter"
+APP_NAME    = "Ehazir Shambles"
 APP_VERSION = "1.0.0"
 WIN_SIZE    = "1400x900"
+APP_TAGLINE = "Stepwise Restructuring of any schools messed data with Ehazir's format"
+APP_SUBTEXT = "Just Shamble"
 
 COLUMN_ALIASES: Dict[str, List[str]] = {
     "Regd_no": [
@@ -155,14 +157,26 @@ def _parse_date_by_label(value: str, label: Optional[str]) -> Optional[datetime]
         return None
 
 STEPS: List[Tuple[int, str]] = [
-    (1, "📁  Import File"),
-    (2, "🔍  Column Detection"),
-    (3, "🧹  Data Cleaning"),
-    (4, "⚙️   Settings"),
-    (5, "🔄  ERP Format"),
-    (6, "📚  Class Separation"),
-    (7, "💾  Export"),
+    (1, "Import File"),
+    (2, "Column Detection"),
+    (3, "Data Cleaning"),
+    (4, "Settings"),
+    (5, "ERP Format"),
+    (6, "Class Separation"),
+    (7, "Export"),
 ]
+
+
+def _resource_path(filename: str) -> str:
+    base_dir = getattr(sys, "_MEIPASS", None)
+    if base_dir:
+        candidate = os.path.join(base_dir, filename)
+        if os.path.exists(candidate):
+            return candidate
+    local_candidate = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    if os.path.exists(local_candidate):
+        return local_candidate
+    return filename
 
 PRESET_DIR = Path.home() / ".school_erp_formatter"
 PRESET_FILE = PRESET_DIR / "presets.json"
@@ -1111,7 +1125,7 @@ class PreviewTable(ctk.CTkFrame):
 
         ctk.CTkEntry(
             top, textvariable=self._search_var,
-            placeholder_text="🔍 Search rows...",
+            placeholder_text="Search rows...",
             width=240, height=30, corner_radius=8,
         ).pack(side="left", padx=(0, 10))
 
@@ -1221,10 +1235,10 @@ class PreviewTable(ctk.CTkFrame):
 
 class LogPanel(ctk.CTkFrame):
     LEVEL_PREFIXES = {
-        "INFO":  "ℹ️  ",
-        "OK":    "✅  ",
-        "WARN":  "⚠️  ",
-        "ERROR": "❌  ",
+        "INFO":  "[INFO] ",
+        "OK":    "[OK] ",
+        "WARN":  "[WARN] ",
+        "ERROR": "[ERROR] ",
     }
 
     def __init__(self, parent, **kwargs):
@@ -1237,7 +1251,7 @@ class LogPanel(ctk.CTkFrame):
         hdr.pack_propagate(False)
 
         ctk.CTkLabel(
-            hdr, text="📋  Live Logs",
+            hdr, text="Live Logs",
             font=ctk.CTkFont(size=11, weight="bold"),
         ).pack(side="left")
 
@@ -1275,12 +1289,11 @@ class StatCard(ctk.CTkFrame):
                  icon: str, color: str = "#6C63FF", **kwargs):
         super().__init__(parent, corner_radius=12, **kwargs)
 
-        ctk.CTkLabel(self, text=icon, font=ctk.CTkFont(size=26)).pack(pady=(14, 2))
         ctk.CTkLabel(
             self, text=value,
             font=ctk.CTkFont(size=22, weight="bold"),
             text_color=color,
-        ).pack(pady=(0, 2))
+        ).pack(pady=(14, 2))
         ctk.CTkLabel(
             self, text=title,
             font=ctk.CTkFont(size=11),
@@ -1306,17 +1319,137 @@ class SchoolERPApp(ctk.CTk):
 
         ctk.set_default_color_theme("blue")
 
-        self.title(f"🏫  {APP_NAME}  v{APP_VERSION}")
+        self.title(APP_NAME)
         self.geometry(WIN_SIZE)
         self.minsize(1100, 700)
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
+        self._main = None
+        self._sidebar = None
+        self._startup_splash = None
+        self._startup_splash_image = None
+        self._startup_splash_progress = None
+        self._startup_splash_title = None
+
+        self._apply_window_icon()
+        self.withdraw()
+        self._show_startup_splash()
+        self.after(250, self._finish_startup)
+
+    def _apply_window_icon(self):
+        ico_path = _resource_path("ehazirshambles.ico")
+        try:
+            if os.path.exists(ico_path):
+                self.iconbitmap(ico_path)
+        except Exception:
+            pass
+
+    def _show_startup_splash(self):
+        splash = ctk.CTkToplevel(self)
+        splash.withdraw()
+        splash.overrideredirect(True)
+        splash.attributes("-topmost", True)
+        splash.attributes("-alpha", 0.0)
+        splash.configure(fg_color=("#0F1117", "#0F1117"))
+
+        width, height = 560, 360
+        x = max(0, (self.winfo_screenwidth() - width) // 2)
+        y = max(0, (self.winfo_screenheight() - height) // 2)
+        splash.geometry(f"{width}x{height}+{x}+{y}")
+
+        try:
+            ico_path = _resource_path("ehazirshambles.ico")
+            if os.path.exists(ico_path):
+                splash.iconbitmap(ico_path)
+        except Exception:
+            pass
+
+        frame = ctk.CTkFrame(splash, corner_radius=24, fg_color=("#111827", "#111827"))
+        frame.pack(fill="both", expand=True, padx=18, pady=18)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+
+        image_widget = None
+        png_path = _resource_path("EhazirShambles_logo.png")
+        if os.path.exists(png_path):
+            try:
+                self._startup_splash_image = tk.PhotoImage(file=png_path)
+                image_widget = ctk.CTkLabel(frame, text="", image=self._startup_splash_image)
+                image_widget.grid(row=0, column=0, pady=(22, 8))
+            except Exception:
+                self._startup_splash_image = None
+
+        if image_widget is None:
+            image_widget = ctk.CTkLabel(
+                frame,
+                text="E",
+                font=ctk.CTkFont(size=58, weight="bold"),
+                text_color="#6C63FF",
+            )
+            image_widget.grid(row=0, column=0, pady=(24, 8))
+
+        self._startup_splash_title = ctk.CTkLabel(
+            frame,
+            text=APP_NAME,
+            font=ctk.CTkFont(size=26, weight="bold"),
+            text_color="#FFFFFF",
+        )
+        self._startup_splash_title.grid(row=1, column=0, pady=(4, 2))
+
+        ctk.CTkLabel(
+            frame,
+            text=APP_TAGLINE,
+            font=ctk.CTkFont(size=13),
+            text_color=("gray75", "gray72"),
+            wraplength=500,
+            justify="center",
+        ).grid(row=2, column=0, padx=28, pady=(2, 0))
+
+        ctk.CTkLabel(
+            frame,
+            text=APP_SUBTEXT,
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color="#6C63FF",
+        ).grid(row=3, column=0, pady=(2, 12))
+
+        self._startup_splash_progress = ctk.CTkProgressBar(frame, height=8, corner_radius=4)
+        self._startup_splash_progress.grid(row=4, column=0, sticky="ew", padx=42, pady=(8, 14))
+        self._startup_splash_progress.set(0)
+
+        splash.deiconify()
+        self._startup_splash = splash
+        self._animate_splash(0)
+
+    def _animate_splash(self, step: int):
+        splash = getattr(self, "_startup_splash", None)
+        if splash is None or not splash.winfo_exists():
+            return
+        alpha = min(1.0, step / 12.0)
+        try:
+            splash.attributes("-alpha", alpha)
+        except Exception:
+            pass
+        try:
+            if self._startup_splash_progress is not None:
+                self._startup_splash_progress.set(alpha)
+        except Exception:
+            pass
+        try:
+            if self._startup_splash_title is not None:
+                size = 22 + min(step, 8)
+                self._startup_splash_title.configure(font=ctk.CTkFont(size=size, weight="bold"))
+        except Exception:
+            pass
+        if step < 12:
+            self.after(45, lambda: self._animate_splash(step + 1))
+
+    def _finish_startup(self):
         self._build_layout()
         self._build_sidebar()
         self._build_all_steps()
         self._show_step(1)
+        self.deiconify()
 
-        # maximize after UI is built to avoid later layout calls restoring size
         def _do_maximize():
             try:
                 self.state("zoomed")
@@ -1327,9 +1460,16 @@ class SchoolERPApp(ctk.CTk):
                     pass
 
         try:
-            self.after(150, _do_maximize)
+            self.after(100, _do_maximize)
         except Exception:
             _do_maximize()
+
+        splash = getattr(self, "_startup_splash", None)
+        if splash is not None and splash.winfo_exists():
+            try:
+                splash.destroy()
+            except Exception:
+                pass
 
     def _build_layout(self):
         self.grid_columnconfigure(1, weight=1)
@@ -1356,10 +1496,11 @@ class SchoolERPApp(ctk.CTk):
         logo = ctk.CTkFrame(sb, fg_color="transparent", height=76)
         logo.pack(fill="x", pady=(14, 4))
         logo.pack_propagate(False)
-        ctk.CTkLabel(logo, text="🏫", font=ctk.CTkFont(size=32)).pack(pady=(6, 0))
+        ctk.CTkLabel(logo, text=APP_NAME, font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(10, 0))
         ctk.CTkLabel(
-            logo, text="School ERP",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            logo, text=APP_SUBTEXT,
+            font=ctk.CTkFont(size=11),
+            text_color="gray50",
         ).pack()
 
         _divider(sb)
@@ -1382,7 +1523,7 @@ class SchoolERPApp(ctk.CTk):
         # theme and undo removed per user request
 
         ctk.CTkButton(
-            sb, text="📋  Recent Files", height=34, corner_radius=8,
+            sb, text="Recent Files", height=34, corner_radius=8,
             fg_color="transparent",
             hover_color=("#D5D8FF", "#252843"),
             command=self._show_recent,
@@ -1543,8 +1684,8 @@ class SchoolERPApp(ctk.CTk):
 
     def _build_step1(self):
         frame = self._new_step_frame()
-        self._make_header(frame, "Step 1 — Import Student File",
-                          "Supports XLSX • XLS • CSV  |  50,000+ rows")
+        self._make_header(frame, "Step 1 — Import File",
+                  "Supports XLSX • XLS • CSV  |  50,000+ rows")
 
         scroll = ctk.CTkScrollableFrame(frame, fg_color="transparent")
         scroll.grid(row=1, column=0, sticky="nsew", padx=22, pady=8)
@@ -1559,10 +1700,9 @@ class SchoolERPApp(ctk.CTk):
 
         inner = ctk.CTkFrame(drop, fg_color="transparent")
         inner.grid(row=0, column=0)
-        ctk.CTkLabel(inner, text="📂", font=ctk.CTkFont(size=44)).pack()
-        ctk.CTkLabel(inner, text="Click to Browse or Drag & Drop",
+        ctk.CTkLabel(inner, text="Browse or Drag & Drop",
                      font=ctk.CTkFont(size=15, weight="bold")).pack(pady=(4, 2))
-        ctk.CTkLabel(inner, text="XLSX  ·  XLS  ·  CSV   |   Up to 50,000+ students",
+        ctk.CTkLabel(inner, text="XLSX  ·  XLS  ·  CSV   |   Up to 50,000+ rows",
                      text_color="gray55").pack()
         ctk.CTkButton(inner, text="  Browse Files  ", height=38, width=150,
                       corner_radius=8, command=lambda: self._s1_browse()).pack(pady=(10, 0))
@@ -1625,7 +1765,7 @@ class SchoolERPApp(ctk.CTk):
             except Exception as exc:
                 logger.error(str(exc))
                 self.after(0, lambda: (
-                    self._s1_prog_lbl.configure(text=f"❌ Error: {exc}", text_color="#F44336"),
+                    self._s1_prog_lbl.configure(text=f"Error: {exc}", text_color="#F44336"),
                     messagebox.showerror("Import Error", str(exc)),
                 ))
 
@@ -1633,7 +1773,7 @@ class SchoolERPApp(ctk.CTk):
 
     def _s1_done(self, stats: dict, df: pd.DataFrame):
         self._s1_prog.set(1.0)
-        self._s1_prog_lbl.configure(text="✅  Import complete!", text_color="#4CAF50")
+        self._s1_prog_lbl.configure(text="Import complete!", text_color="#4CAF50")
         self._render_stat_cards(self._s1_cards, [
             ("Total Rows",    f"{stats['rows']:,}",      "📊", "#6C63FF"),
             ("Columns",       str(stats["cols"]),        "📋", "#4CAF50"),
@@ -1653,7 +1793,7 @@ class SchoolERPApp(ctk.CTk):
 
     def _build_step2(self):
         frame = self._new_step_frame()
-        self._make_header(frame, "Step 2 — Auto Column Detection",
+        self._make_header(frame, "Step 2 — Column Detection",
                           "Maps source columns to ERP fields intelligently")
 
         scroll = ctk.CTkScrollableFrame(frame, fg_color="transparent")
@@ -1664,7 +1804,7 @@ class SchoolERPApp(ctk.CTk):
         map_card = ctk.CTkFrame(scroll, corner_radius=12)
         map_card.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=(0, 10))
         map_card.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(map_card, text="🔍  Detected Column Mappings",
+        ctk.CTkLabel(map_card, text="Detected Column Mappings",
                      font=ctk.CTkFont(size=13, weight="bold")).grid(
             row=0, column=0, columnspan=3, sticky="w", padx=14, pady=(12, 6))
 
@@ -1674,7 +1814,7 @@ class SchoolERPApp(ctk.CTk):
 
         warn_card = ctk.CTkFrame(scroll, corner_radius=12)
         warn_card.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=(0, 10))
-        ctk.CTkLabel(warn_card, text="⚠️  Warnings & Issues",
+        ctk.CTkLabel(warn_card, text="Warnings & Issues",
                      font=ctk.CTkFont(size=13, weight="bold")).pack(
             anchor="w", padx=14, pady=(12, 6))
 
@@ -1776,7 +1916,7 @@ class SchoolERPApp(ctk.CTk):
 
         self._s2_dob_frame = ctk.CTkFrame(self._s2_map_inner, fg_color="transparent")
         self._s2_dob_frame.grid(row=len(ERP_MAPPING_FIELDS) + 1, column=0, columnspan=3, sticky="ew", pady=(8,0))
-        ctk.CTkLabel(self._s2_dob_frame, text="🛠️  Format Customizer",
+        ctk.CTkLabel(self._s2_dob_frame, text="Format Customizer",
                      font=ctk.CTkFont(size=12, weight="bold")).grid(row=0, column=0, sticky="w", padx=4, pady=(4,4))
         ctk.CTkLabel(
             self._s2_dob_frame,
@@ -1959,7 +2099,7 @@ class SchoolERPApp(ctk.CTk):
 
     def _s3_done(self, stats: dict, df: pd.DataFrame):
         self._s3_prog.set(1.0)
-        self._s3_lbl.configure(text="✅  Cleaning complete!", text_color="#4CAF50")
+        self._s3_lbl.configure(text="Cleaning complete!", text_color="#4CAF50")
         self._render_stat_cards(self._s3_cards, [
             ("Original Rows",      f"{stats.get('original',0):,}",          "📊", "#6C63FF"),
             ("Valid Rows",         f"{stats.get('final',0):,}",              "✅", "#4CAF50"),
@@ -1990,7 +2130,7 @@ class SchoolERPApp(ctk.CTk):
         sc.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=(0, 10))
         sc.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(sc, text="🏫  School Information",
+        ctk.CTkLabel(sc, text="School Information",
                      font=ctk.CTkFont(size=13, weight="bold")).grid(
             row=0, column=0, sticky="w", padx=16, pady=(14, 8))
 
@@ -2017,9 +2157,9 @@ class SchoolERPApp(ctk.CTk):
 
         preset_row = ctk.CTkFrame(sc, fg_color="transparent")
         preset_row.grid(row=9, column=0, sticky="ew", padx=16, pady=(0, 14))
-        ctk.CTkButton(preset_row, text="💾  Save Preset", height=30, width=110,
+        ctk.CTkButton(preset_row, text="Save Preset", height=30, width=110,
                       corner_radius=7, command=self._s4_save_preset).pack(side="left", padx=(0, 6))
-        ctk.CTkButton(preset_row, text="📂  Load Preset", height=30, width=110,
+        ctk.CTkButton(preset_row, text="Load Preset", height=30, width=110,
                       corner_radius=7, fg_color="transparent",
                       border_width=1, border_color="#6C63FF",
                       command=self._s4_load_preset).pack(side="left")
@@ -2028,7 +2168,7 @@ class SchoolERPApp(ctk.CTk):
         fc.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=(0, 10))
         fc.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(fc, text="🔢  Regd_no Formula",
+        ctk.CTkLabel(fc, text="Regd_no Formula",
                      font=ctk.CTkFont(size=13, weight="bold")).grid(
             row=0, column=0, sticky="w", padx=16, pady=(14, 8))
 
@@ -2055,7 +2195,7 @@ class SchoolERPApp(ctk.CTk):
         pv.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 10))
         pv.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(pv, text="👁️  Formula Preview",
+        ctk.CTkLabel(pv, text="Formula Preview",
                      font=ctk.CTkFont(size=13, weight="bold")).grid(
             row=0, column=0, columnspan=2, sticky="w", padx=16, pady=(14, 6))
 
@@ -2065,7 +2205,7 @@ class SchoolERPApp(ctk.CTk):
         )
         self._s4_preview_box.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 4))
 
-        ctk.CTkButton(pv, text="🔄  Refresh Preview", height=30, width=150,
+        ctk.CTkButton(pv, text="Refresh Preview", height=30, width=150,
                       corner_radius=7, command=self._s4_refresh).grid(
             row=2, column=0, sticky="w", padx=16, pady=(0, 14))
 
@@ -2278,7 +2418,7 @@ class SchoolERPApp(ctk.CTk):
 
     def _s5_done(self, df: pd.DataFrame, issues: List[str]):
         self._s5_prog.set(1.0)
-        self._s5_lbl.configure(text="✅  ERP structure ready!", text_color="#4CAF50")
+        self._s5_lbl.configure(text="ERP structure ready!", text_color="#4CAF50")
 
         n_classes = 0
         if self.app_state.cleaned_df is not None and "CurrentClass" in self.app_state.cleaned_df.columns:
@@ -2317,7 +2457,7 @@ class SchoolERPApp(ctk.CTk):
         scroll.grid(row=1, column=0, sticky="nsew", padx=22, pady=8)
         scroll.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(scroll, text="📚  Detected Classes",
+        ctk.CTkLabel(scroll, text="Detected Classes",
                      font=ctk.CTkFont(size=13, weight="bold")).grid(
             row=0, column=0, sticky="w", pady=(0, 4))
 
@@ -2470,7 +2610,7 @@ class SchoolERPApp(ctk.CTk):
         self._s7_cards = ctk.CTkFrame(scroll, fg_color="transparent")
         self._s7_cards.grid(row=2, column=0, sticky="ew", pady=(0, 12))
 
-        ctk.CTkLabel(scroll, text="📁  Exported Files",
+        ctk.CTkLabel(scroll, text="Exported Files",
                      font=ctk.CTkFont(size=13, weight="bold")).grid(
             row=3, column=0, sticky="w", pady=(0, 4))
 
@@ -2482,7 +2622,7 @@ class SchoolERPApp(ctk.CTk):
         self._s7_log.grid(row=5, column=0, sticky="ew", pady=(0, 10))
 
         self._s7_open_btn = ctk.CTkButton(
-            scroll, text="📂  Open Output Folder",
+            scroll, text="Open Output Folder",
             height=46, corner_radius=12,
             fg_color="#4CAF50", hover_color="#388E3C",
             font=ctk.CTkFont(size=13, weight="bold"),
@@ -2491,7 +2631,7 @@ class SchoolERPApp(ctk.CTk):
         self._s7_open_btn.grid(row=6, column=0, sticky="ew", pady=(0, 8))
 
         ctk.CTkButton(
-            scroll, text="🔄  Start New Session",
+            scroll, text="Start New Session",
             height=38, corner_radius=10,
             fg_color="transparent", border_width=1, border_color="#6C63FF",
             command=self._restart,
@@ -2526,7 +2666,7 @@ class SchoolERPApp(ctk.CTk):
         self._s7_prog.set(1.0)
         total = sum(len(d) for d in self.app_state.class_groups.values())
         self._s7_lbl.configure(
-            text=f"✅  Export complete!  {len(exported)} files  ·  {total:,} total records",
+            text=f"Export complete!  {len(exported)} files  ·  {total:,} total records",
             text_color="#4CAF50",
         )
         self._render_stat_cards(self._s7_cards, [
