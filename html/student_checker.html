@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Data Verification System</title>
+
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f9;
+    color: #1e293b;
+}
+
+header {
+    background: #172554;
+    color: white;
+    padding: 22px 30px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 25px;
+}
+
+header p {
+    margin: 6px 0 0;
+    color: #cbd5e1;
+}
+
+.container {
+    max-width: 1250px;
+    margin: 25px auto;
+    padding: 0 18px;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 19px;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+input:disabled {
+    background: #f8fafc;
+    color: #334155;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.primary {
+    background: #2563eb;
+    color: white;
+}
+
+.success {
+    background: #15803d;
+    color: white;
+}
+
+.secondary {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.danger {
+    background: #dc2626;
+    color: white;
+}
+
+.correct-btn {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.incorrect-btn {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.correct-btn.active {
+    background: #15803d;
+    color: white;
+}
+
+.incorrect-btn.active {
+    background: #b45309;
+    color: white;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.row > * {
+    flex: 1;
+}
+
+.message {
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.note {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.stat {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.stat small {
+    display: block;
+    color: #64748b;
+}
+
+.stat strong {
+    display: block;
+    font-size: 23px;
+    margin-top: 3px;
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns: 310px 1fr;
+    gap: 18px;
+}
+
+.student-results {
+    max-height: 600px;
+    overflow-y: auto;
+    margin-top: 12px;
+}
+
+.student {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #172033;
+    margin-bottom: 7px;
+    padding: 12px;
+    border-radius: 9px;
+}
+
+.student:hover {
+    background: #f8fafc;
+}
+
+.student.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.student-name {
+    display: block;
+    font-weight: 600;
+}
+
+.student-info {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.student-status {
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.status-correct {
+    color: #15803d;
+}
+
+.status-changed {
+    color: #b45309;
+}
+
+.status-pending {
+    color: #64748b;
+}
+
+.meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.badge {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #e2e8f0;
+}
+
+.badge.correct {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.changed {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.field.full {
+    grid-column: 1 / -1;
+}
+
+.field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.verify-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+    align-items: center;
+}
+
+.verify-field {
+    border-left: 3px solid #cbd5e1;
+    padding-left: 8px;
+}
+
+.verify-field.correct {
+    border-left-color: #16a34a;
+}
+
+.verify-field.incorrect {
+    border-left-color: #d97706;
+}
+
+.actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.export-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.progress-bar {
+    height: 9px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #2563eb;
+    width: 0%;
+    transition: width 0.3s;
+}
+
+.empty {
+    text-align: center;
+    padding: 70px 20px;
+    color: #64748b;
+}
+
+#fileInput {
+    padding: 8px;
+}
+
+@media(max-width: 850px) {
+
+    .workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .fields {
+        grid-template-columns: 1fr;
+    }
+
+    .field.full {
+        grid-column: auto;
+    }
+
+    .verify-row {
+        grid-template-columns: 1fr;
+    }
+
+    .export-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Student Data Verification System</h1>
+    <p>Check, correct and verify student information</p>
+</header>
+
+<div class="container">
+
+    <!-- UPLOAD -->
+    <section class="card">
+
+        <h2>1. Upload Original Student CSV</h2>
+
+        <div class="row">
+            <input type="file" id="fileInput" accept=".csv">
+            <button class="primary" onclick="loadCSV()">
+                Load CSV
+            </button>
+        </div>
+
+        <p class="note">
+            The uploaded CSV is treated as the original/reference data.
+            It will never be modified.
+        </p>
+
+        <div id="loadMessage" class="message hidden"></div>
+
+    </section>
+
+
+    <!-- START -->
+    <section class="card hidden" id="startSection">
+
+        <h2>2. Start Verification</h2>
+
+        <p id="fileInfo" class="note"></p>
+
+        <button class="success" onclick="startChecking()">
+            Start Checking
+        </button>
+
+    </section>
+
+
+    <!-- WORKSPACE -->
+    <section id="mainWorkspace" class="hidden">
+
+        <!-- STATISTICS -->
+
+        <div class="stats">
+
+            <div class="stat">
+                <small>Total Students</small>
+                <strong id="totalCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Fully Checked</small>
+                <strong id="checkedCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Correct</small>
+                <strong id="correctCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Corrected</small>
+                <strong id="correctedCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Remaining</small>
+                <strong id="remainingCount">0</strong>
+            </div>
+
+        </div>
+
+
+        <!-- PROGRESS -->
+
+        <div class="card">
+
+            <strong>Checking Progress</strong>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <p class="note" id="progressText">
+                0% completed
+            </p>
+
+        </div>
+
+
+        <div class="workspace">
+
+            <!-- SEARCH -->
+
+            <section class="card">
+
+                <h2>Find Student</h2>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search name or student ID..."
+                    oninput="renderStudents()"
+                >
+
+                <br><br>
+
+                <select id="filterSelect" onchange="renderStudents()">
+
+                    <option value="all">
+                        All Students
+                    </option>
+
+                    <option value="unchecked">
+                        Not Checked
+                    </option>
+
+                    <option value="correct">
+                        Correct
+                    </option>
+
+                    <option value="corrected">
+                        Corrected
+                    </option>
+
+                </select>
+
+                <div id="studentResults" class="student-results"></div>
+
+                <p class="note" id="resultCount"></p>
+
+            </section>
+
+
+            <!-- EDITOR -->
+
+            <section class="card">
+
+                <div id="emptyEditor" class="empty">
+
+                    <h2>Select a Student</h2>
+
+                    <p>
+                        Search for a student and select their name
+                        to begin verification.
+                    </p>
+
+                </div>
+
+
+                <div id="studentEditor" class="hidden">
+
+                    <div class="meta">
+
+                        <div>
+
+                            <h2 id="studentTitle"></h2>
+
+                            <span
+                                id="studentInfo"
+                                class="note">
+                            </span>
+
+                        </div>
+
+                        <span
+                            id="studentBadge"
+                            class="badge">
+                            Not Checked
+                        </span>
+
+                    </div>
+
+
+                    <div class="message">
+
+                        <strong>How to check:</strong>
+
+                        Click
+                        <b>✓ Correct</b>
+                        if the displayed value is correct.
+
+                        Click
+                        <b>✎ Incorrect</b>
+                        if it needs correction.
+
+                        An incorrect field becomes editable.
+
+                    </div>
+
+
+                    <br>
+
+
+                    <div class="fields">
+
+                        <!-- NAME -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="name">
+
+                            <label>
+                                Student Name
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_name"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('name')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('name')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- GUARDIAN -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="guardian">
+
+                            <label>
+                                Guardian Name
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_guardian"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('guardian')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('guardian')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CONTACT -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="contact">
+
+                            <label>
+                                Student Contact
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_contact"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('contact')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('contact')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- GUARDIAN CONTACT -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="guardianContact">
+
+                            <label>
+                                Guardian Contact
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_guardianContact"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('guardianContact')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('guardianContact')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div
+                            class="field verify-field full"
+                            data-field="address">
+
+                            <label>
+                                Student Address
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_address"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('address')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('address')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- GUARDIAN ADDRESS -->
+
+                        <div
+                            class="field verify-field full"
+                            data-field="guardianAddress">
+
+                            <label>
+                                Guardian Address
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_guardianAddress"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('guardianAddress')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('guardianAddress')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DOB -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="dob">
+
+                            <label>
+                                Date of Birth
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_dob"
+                                    disabled
+                                    placeholder="YYYY-MM-DD"
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('dob')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('dob')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- GENDER -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="gender">
+
+                            <label>
+                                Gender
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_gender"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('gender')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('gender')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- GRADE -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="grade">
+
+                            <label>
+                                Grade
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_grade"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('grade')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('grade')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SECTION -->
+
+                        <div
+                            class="field verify-field"
+                            data-field="section">
+
+                            <label>
+                                Section
+                            </label>
+
+                            <div class="verify-row">
+
+                                <input
+                                    id="field_section"
+                                    disabled
+                                >
+
+                                <button
+                                    class="correct-btn"
+                                    onclick="markCorrect('section')">
+                                    ✓ Correct
+                                </button>
+
+                                <button
+                                    class="incorrect-btn"
+                                    onclick="markIncorrect('section')">
+                                    ✎ Incorrect
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        <button
+                            class="success"
+                            onclick="saveStudent(false)">
+                            Save Verification & Next
+                        </button>
+
+                        <button
+                            class="secondary"
+                            onclick="saveStudent(true)">
+                            Save & Stay
+                        </button>
+
+                        <button
+                            class="secondary"
+                            onclick="previousStudent()">
+                            ← Previous
+                        </button>
+
+                        <button
+                            class="secondary"
+                            onclick="nextStudent()">
+                            Next →
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- EXPORT -->
+
+        <section class="card">
+
+            <h2>Export Results</h2>
+
+            <p class="note">
+                Generate new Excel files. The original uploaded CSV
+                is never changed.
+            </p>
+
+            <div class="export-grid">
+
+                <button
+                    class="danger"
+                    onclick="exportIncorrect()">
+                    Download Incorrect Details.xlsx
+                </button>
+
+                <button
+                    class="primary"
+                    onclick="exportCorrected()">
+                    Download Corrected Students.xlsx
+                </button>
+
+                <button
+                    class="success"
+                    onclick="exportComplete()">
+                    Download Complete Verified List.xlsx
+                </button>
+
+                <button
+                    class="secondary"
+                    onclick="exportProgress()">
+                    Download Checking Progress.xlsx
+                </button>
+
+            </div>
+
+        </section>
+
+    </section>
+
+</div>
+
+
+<script>
+
+let students = [];
+let headers = [];
+let currentStudentId = null;
+
+
+/* =========================================
+   FIELD DEFINITIONS
+========================================= */
+
+const fields = {
+
+    name: [
+        "Name",
+        "Student Name",
+        "Student"
+    ],
+
+    guardian: [
+        "Guardian Name",
+        "Guardian"
+    ],
+
+    contact: [
+        "Contact",
+        "Phone",
+        "Student Contact",
+        "Student Phone"
+    ],
+
+    guardianContact: [
+        "Guardian Contact",
+        "Guardian Phone",
+        "Guardian Contact Number"
+    ],
+
+    address: [
+        "Address",
+        "Student Address"
+    ],
+
+    guardianAddress: [
+        "Guardian Address",
+        "GuardianAddress"
+    ],
+
+    dob: [
+        "DOB",
+        "Date of Birth",
+        "Birth Date",
+        "date_of_birth"
+    ],
+
+    gender: [
+        "Gender",
+        "Sex"
+    ],
+
+    grade: [
+        "Grade",
+        "Class"
+    ],
+
+    section: [
+        "Section",
+        "Sec"
+    ],
+
+    id: [
+        "ID",
+        "Student ID",
+        "StudentID",
+        "student_id"
+    ]
+
+};
+
+
+/* =========================================
+   CSV PARSER
+========================================= */
+
+function parseCSV(text) {
+
+    const rows = [];
+
+    let row = [];
+    let cell = "";
+    let insideQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+
+            cell += '"';
+            i++;
+
+        }
+
+        else if (char === '"') {
+
+            insideQuotes = !insideQuotes;
+
+        }
+
+        else if (char === "," && !insideQuotes) {
+
+            row.push(cell);
+            cell = "";
+
+        }
+
+        else if (
+            (char === "\n" || char === "\r")
+            && !insideQuotes
+        ) {
+
+            if (char === "\r" && next === "\n") {
+                i++;
+            }
+
+            row.push(cell);
+
+            if (
+                row.some(
+                    value => value.trim() !== ""
+                )
+            ) {
+                rows.push(row);
+            }
+
+            row = [];
+            cell = "";
+
+        }
+
+        else {
+
+            cell += char;
+
+        }
+    }
+
+    if (cell.length || row.length) {
+
+        row.push(cell);
+
+        if (
+            row.some(
+                value => value.trim() !== ""
+            )
+        ) {
+            rows.push(row);
+        }
+    }
+
+    return rows;
+}
+
+
+/* =========================================
+   HELPERS
+========================================= */
+
+function normalize(value) {
+
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]+/g, "");
+
+}
+
+
+function findHeader(candidates) {
+
+    for (const candidate of candidates) {
+
+        const index = headers.findIndex(
+            header =>
+                normalize(header)
+                ===
+                normalize(candidate)
+        );
+
+        if (index !== -1) {
+            return headers[index];
+        }
+
+    }
+
+    return null;
+}
+
+
+function getValue(row, candidates) {
+
+    const header = findHeader(candidates);
+
+    if (!header) {
+        return "";
+    }
+
+    const index = headers.indexOf(header);
+
+    return String(row[index] || "").trim();
+
+}
+
+
+/* =========================================
+   LOAD CSV
+========================================= */
+
+async function loadCSV() {
+
+    const file =
+        document.getElementById("fileInput").files[0];
+
+    if (!file) {
+
+        showMessage(
+            "Please select a CSV file first."
+        );
+
+        return;
+    }
+
+    const text = await file.text();
+
+    const rows = parseCSV(text);
+
+    if (rows.length < 2) {
+
+        showMessage(
+            "The CSV does not contain enough data."
+        );
+
+        return;
+    }
+
+    headers =
+        rows[0].map(
+            header => header.trim()
+        );
+
+    students = [];
+
+    rows.slice(1).forEach(
+        (row, index) => {
+
+            const original = {};
+
+            headers.forEach(
+                (header, i) => {
+
+                    original[header] =
+                        String(
+                            row[i] || ""
+                        ).trim();
+
+                }
+            );
+
+
+            const student = {
+
+                internalId: index,
+
+                original: original,
+
+                values: {
+
+                    id:
+                        getValue(
+                            row,
+                            fields.id
+                        ),
+
+                    name:
+                        getValue(
+                            row,
+                            fields.name
+                        ),
+
+                    guardian:
+                        getValue(
+                            row,
+                            fields.guardian
+                        ),
+
+                    contact:
+                        getValue(
+                            row,
+                            fields.contact
+                        ),
+
+                    guardianContact:
+                        getValue(
+                            row,
+                            fields.guardianContact
+                        ),
+
+                    address:
+                        getValue(
+                            row,
+                            fields.address
+                        ),
+
+                    guardianAddress:
+                        getValue(
+                            row,
+                            fields.guardianAddress
+                        ),
+
+                    dob:
+                        getValue(
+                            row,
+                            fields.dob
+                        ),
+
+                    gender:
+                        getValue(
+                            row,
+                            fields.gender
+                        ),
+
+                    grade:
+                        getValue(
+                            row,
+                            fields.grade
+                        ),
+
+                    section:
+                        getValue(
+                            row,
+                            fields.section
+                        )
+
+                },
+
+                fieldStatus: {},
+
+                corrections: [],
+
+                status: "unchecked"
+
+            };
+
+            students.push(student);
+
+        }
+    );
+
+
+    document
+        .getElementById("startSection")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("fileInfo")
+        .textContent =
+        `${students.length.toLocaleString()} students loaded from ${file.name}.`;
+
+
+    showMessage(
+        "CSV loaded successfully. The original file will not be modified."
+    );
+
+}
+
+
+/* =========================================
+   START
+========================================= */
+
+function startChecking() {
+
+    document
+        .getElementById("mainWorkspace")
+        .classList.remove("hidden");
+
+    renderStats();
+
+    renderStudents();
+
+    if (students.length) {
+
+        selectStudent(
+            students[0].internalId
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+function getFilteredStudents() {
+
+    const search =
+        normalize(
+            document.getElementById(
+                "searchInput"
+            ).value
+        );
+
+    const filter =
+        document.getElementById(
+            "filterSelect"
+        ).value;
+
+
+    return students.filter(student => {
+
+        const matchesSearch =
+            !search
+            ||
+            normalize(
+                student.values.name
+            ).includes(search)
+            ||
+            normalize(
+                student.values.id
+            ).includes(search);
+
+
+        let matchesFilter = true;
+
+
+        if (filter === "unchecked") {
+
+            matchesFilter =
+                student.status === "unchecked";
+
+        }
+
+        if (filter === "correct") {
+
+            matchesFilter =
+                student.status === "correct";
+
+        }
+
+        if (filter === "corrected") {
+
+            matchesFilter =
+                student.status === "corrected";
+
+        }
+
+
+        return (
+            matchesSearch
+            &&
+            matchesFilter
+        );
+
+    });
+
+}
+
+
+/* =========================================
+   STUDENT LIST
+========================================= */
+
+function renderStudents() {
+
+    const container =
+        document.getElementById(
+            "studentResults"
+        );
+
+    container.innerHTML = "";
+
+
+    const list =
+        getFilteredStudents();
+
+
+    list.forEach(student => {
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.className =
+            "student"
+            +
+            (
+                student.internalId
+                ===
+                currentStudentId
+                ? " active"
+                : ""
+            );
+
+
+        const name =
+            document.createElement(
+                "span"
+            );
+
+        name.className =
+            "student-name";
+
+        name.textContent =
+            student.values.name
+            ||
+            "(Unnamed student)";
+
+
+        const info =
+            document.createElement(
+                "span"
+            );
+
+        info.className =
+            "student-info";
+
+        info.textContent =
+            `ID: ${student.values.id || "—"} · Grade ${student.values.grade || "—"} · Section ${student.values.section || "—"}`;
+
+
+        const status =
+            document.createElement(
+                "span"
+            );
+
+        status.className =
+            "student-status";
+
+
+        if (
+            student.status
+            ===
+            "correct"
+        ) {
+
+            status.classList.add(
+                "status-correct"
+            );
+
+            status.textContent =
+                "✓ Correct";
+
+        }
+
+        else if (
+            student.status
+            ===
+            "corrected"
+        ) {
+
+            status.classList.add(
+                "status-changed"
+            );
+
+            status.textContent =
+                "✎ Corrected";
+
+        }
+
+        else {
+
+            status.classList.add(
+                "status-pending"
+            );
+
+            status.textContent =
+                "Not checked";
+
+        }
+
+
+        button.append(
+            name,
+            info,
+            status
+        );
+
+
+        button.onclick =
+            () =>
+                selectStudent(
+                    student.internalId
+                );
+
+
+        container.appendChild(
+            button
+        );
+
+    });
+
+
+    document
+        .getElementById(
+            "resultCount"
+        )
+        .textContent =
+        `Showing ${list.length} of ${students.length} students`;
+
+}
+
+
+/* =========================================
+   SELECT STUDENT
+========================================= */
+
+function selectStudent(id) {
+
+    currentStudentId = id;
+
+
+    const student =
+        students.find(
+            s =>
+                s.internalId === id
+        );
+
+
+    if (!student) {
+        return;
+    }
+
+
+    document
+        .getElementById(
+            "emptyEditor"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+
+    document
+        .getElementById(
+            "studentEditor"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+
+    document
+        .getElementById(
+            "studentTitle"
+        )
+        .textContent =
+        student.values.name
+        ||
+        "(Unnamed student)";
+
+
+    document
+        .getElementById(
+            "studentInfo"
+        )
+        .textContent =
+        `Student ID: ${student.values.id || "—"} · Grade: ${student.values.grade || "—"} · Section: ${student.values.section || "—"}`;
+
+
+    updateBadge(
+        student
+    );
+
+
+    const fieldKeys =
+        Object.keys(fields)
+            .filter(
+                key =>
+                    key !== "id"
+            );
+
+
+    fieldKeys.forEach(
+        key => {
+
+            const input =
+                document.getElementById(
+                    `field_${key}`
+                );
+
+            if (!input) {
+                return;
+            }
+
+
+            input.value =
+                student.values[key]
+                ||
+                "";
+
+
+            input.disabled = true;
+
+
+            const wrapper =
+                document.querySelector(
+                    `.verify-field[data-field="${key}"]`
+                );
+
+
+            wrapper.classList.remove(
+                "correct",
+                "incorrect"
+            );
+
+
+            const status =
+                student.fieldStatus[key];
+
+
+            if (
+                status === "correct"
+            ) {
+
+                wrapper.classList.add(
+                    "correct"
+                );
+
+            }
+
+            else if (
+                status === "incorrect"
+            ) {
+
+                wrapper.classList.add(
+                    "incorrect"
+                );
+
+            }
+
+
+            const correctButton =
+                wrapper.querySelector(
+                    ".correct-btn"
+                );
+
+            const incorrectButton =
+                wrapper.querySelector(
+                    ".incorrect-btn"
+                );
+
+
+            correctButton.classList.toggle(
+                "active",
+                status === "correct"
+            );
+
+
+            incorrectButton.classList.toggle(
+                "active",
+                status === "incorrect"
+            );
+
+        }
+    );
+
+
+    renderStudents();
+
+}
+
+
+/* =========================================
+   MARK CORRECT
+========================================= */
+
+function markCorrect(field) {
+
+    const student =
+        students.find(
+            s =>
+                s.internalId
+                ===
+                currentStudentId
+        );
+
+
+    if (!student) {
+        return;
+    }
+
+
+    const input =
+        document.getElementById(
+            `field_${field}`
+        );
+
+
+    input.value =
+        student.values[field];
+
+
+    input.disabled = true;
+
+
+    student.fieldStatus[field] =
+        "correct";
+
+
+    const wrapper =
+        document.querySelector(
+            `.verify-field[data-field="${field}"]`
+        );
+
+
+    wrapper.classList.remove(
+        "incorrect"
+    );
+
+    wrapper.classList.add(
+        "correct"
+    );
+
+
+    wrapper
+        .querySelector(
+            ".correct-btn"
+        )
+        .classList.add(
+            "active"
+        );
+
+
+    wrapper
+        .querySelector(
+            ".incorrect-btn"
+        )
+        .classList.remove(
+            "active"
+        );
+
+}
+
+
+/* =========================================
+   MARK INCORRECT
+========================================= */
+
+function markIncorrect(field) {
+
+    const student =
+        students.find(
+            s =>
+                s.internalId
+                ===
+                currentStudentId
+        );
+
+
+    if (!student) {
+        return;
+    }
+
+
+    const input =
+        document.getElementById(
+            `field_${field}`
+        );
+
+
+    input.disabled = false;
+
+
+    student.fieldStatus[field] =
+        "incorrect";
+
+
+    const wrapper =
+        document.querySelector(
+            `.verify-field[data-field="${field}"]`
+        );
+
+
+    wrapper.classList.remove(
+        "correct"
+    );
+
+    wrapper.classList.add(
+        "incorrect"
+    );
+
+
+    wrapper
+        .querySelector(
+            ".incorrect-btn"
+        )
+        .classList.add(
+            "active"
+        );
+
+
+    wrapper
+        .querySelector(
+            ".correct-btn"
+        )
+        .classList.remove(
+            "active"
+        );
+
+
+    input.focus();
+
+}
+
+
+/* =========================================
+   SAVE STUDENT
+========================================= */
+
+function saveStudent(stay) {
+
+    const student =
+        students.find(
+            s =>
+                s.internalId
+                ===
+                currentStudentId
+        );
+
+
+    if (!student) {
+        return;
+    }
+
+
+    const fieldKeys =
+        Object.keys(fields)
+            .filter(
+                key =>
+                    key !== "id"
+            );
+
+
+    /* Check all fields */
+
+    const incomplete =
+        fieldKeys.filter(
+            field =>
+                !student.fieldStatus[field]
+        );
+
+
+    if (incomplete.length > 0) {
+
+        alert(
+            `Please verify all fields first.\n\nRemaining fields: ${incomplete.length}`
+        );
+
+        return;
+
+    }
+
+
+    const corrections = [];
+
+
+    fieldKeys.forEach(
+        field => {
+
+            const input =
+                document.getElementById(
+                    `field_${field}`
+                );
+
+
+            const newValue =
+                input.value.trim();
+
+
+            const originalValue =
+                getOriginalValue(
+                    student,
+                    field
+                );
+
+
+            student.values[field] =
+                newValue;
+
+
+            if (
+                newValue
+                !==
+                originalValue
+            ) {
+
+                corrections.push({
+
+                    field:
+                        field,
+
+                    original:
+                        originalValue,
+
+                    corrected:
+                        newValue
+
+                });
+
+            }
+
+        }
+    );
+
+
+    student.corrections =
+        corrections;
+
+
+    if (
+        corrections.length
+        > 0
+    ) {
+
+        student.status =
+            "corrected";
+
+    }
+
+    else {
+
+        student.status =
+            "correct";
+
+    }
+
+
+    updateBadge(
+        student
+    );
+
+
+    renderStats();
+
+    renderStudents();
+
+
+    if (!stay) {
+
+        nextStudent();
+
+    }
+
+    else {
+
+        selectStudent(
+            student.internalId
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   ORIGINAL VALUE
+========================================= */
+
+function getOriginalValue(
+    student,
+    field
+) {
+
+    const header =
+        findHeader(
+            fields[field]
+        );
+
+
+    if (!header) {
+        return "";
+    }
+
+
+    return String(
+        student.original[header]
+        ||
+        ""
+    ).trim();
+
+}
+
+
+/* =========================================
+   NEXT / PREVIOUS
+========================================= */
+
+function nextStudent() {
+
+    const list =
+        getFilteredStudents();
+
+
+    const index =
+        list.findIndex(
+            s =>
+                s.internalId
+                ===
+                currentStudentId
+        );
+
+
+    if (
+        index >= 0
+        &&
+        index < list.length - 1
+    ) {
+
+        selectStudent(
+            list[index + 1]
+                .internalId
+        );
+
+    }
+
+}
+
+
+function previousStudent() {
+
+    const list =
+        getFilteredStudents();
+
+
+    const index =
+        list.findIndex(
+            s =>
+                s.internalId
+                ===
+                currentStudentId
+        );
+
+
+    if (index > 0) {
+
+        selectStudent(
+            list[index - 1]
+                .internalId
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   BADGE
+========================================= */
+
+function updateBadge(
+    student
+) {
+
+    const badge =
+        document.getElementById(
+            "studentBadge"
+        );
+
+
+    badge.className =
+        "badge";
+
+
+    if (
+        student.status
+        ===
+        "correct"
+    ) {
+
+        badge.classList.add(
+            "correct"
+        );
+
+        badge.textContent =
+            "✓ Correct";
+
+    }
+
+    else if (
+        student.status
+        ===
+        "corrected"
+    ) {
+
+        badge.classList.add(
+            "changed"
+        );
+
+        badge.textContent =
+            "✎ Corrected";
+
+    }
+
+    else {
+
+        badge.textContent =
+            "Not Checked";
+
+    }
+
+}
+
+
+/* =========================================
+   STATISTICS
+========================================= */
+
+function renderStats() {
+
+    const total =
+        students.length;
+
+
+    const checked =
+        students.filter(
+            s =>
+                s.status
+                !==
+                "unchecked"
+        ).length;
+
+
+    const correct =
+        students.filter(
+            s =>
+                s.status
+                ===
+                "correct"
+        ).length;
+
+
+    const corrected =
+        students.filter(
+            s =>
+                s.status
+                ===
+                "corrected"
+        ).length;
+
+
+    const remaining =
+        total - checked;
+
+
+    document
+        .getElementById(
+            "totalCount"
+        )
+        .textContent =
+        total;
+
+
+    document
+        .getElementById(
+            "checkedCount"
+        )
+        .textContent =
+        checked;
+
+
+    document
+        .getElementById(
+            "correctCount"
+        )
+        .textContent =
+        correct;
+
+
+    document
+        .getElementById(
+            "correctedCount"
+        )
+        .textContent =
+        corrected;
+
+
+    document
+        .getElementById(
+            "remainingCount"
+        )
+        .textContent =
+        remaining;
+
+
+    const percent =
+        total
+        ?
+        Math.round(
+            checked / total * 100
+        )
+        :
+        0;
+
+
+    document
+        .getElementById(
+            "progressFill"
+        )
+        .style.width =
+        percent + "%";
+
+
+    document
+        .getElementById(
+            "progressText"
+        )
+        .textContent =
+        `${percent}% completed — ${checked} of ${total} students checked`;
+
+}
+
+
+/* =========================================
+   REPORT DATA
+========================================= */
+
+function finalStudentRecord(
+    student
+) {
+
+    const result = {};
+
+
+    /* Keep every original column */
+
+    headers.forEach(
+        header => {
+
+            result[header] =
+                student.original[
+                    header
+                ] || "";
+
+        }
+    );
+
+
+    /*
+       Replace the relevant fields
+       with verified values.
+    */
+
+    const mapping = {
+
+        name:
+            fields.name,
+
+        guardian:
+            fields.guardian,
+
+        contact:
+            fields.contact,
+
+        guardianContact:
+            fields.guardianContact,
+
+        address:
+            fields.address,
+
+        guardianAddress:
+            fields.guardianAddress,
+
+        dob:
+            fields.dob,
+
+        gender:
+            fields.gender,
+
+        grade:
+            fields.grade,
+
+        section:
+            fields.section
+
+    };
+
+
+    Object.keys(mapping).forEach(
+        field => {
+
+            const header =
+                findHeader(
+                    mapping[field]
+                );
+
+
+            if (header) {
+
+                result[header] =
+                    student.values[field];
+
+            }
+
+        }
+    );
+
+
+    return result;
+
+}
+
+
+/* =========================================
+   EXCEL DOWNLOAD
+========================================= */
+
+function downloadExcel(
+    filename,
+    rows,
+    sheetName
+) {
+
+    if (
+        typeof XLSX
+        ===
+        "undefined"
+    ) {
+
+        alert(
+            "Excel library could not load. Please connect to the internet and try again."
+        );
+
+        return;
+
+    }
+
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            rows
+        );
+
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        sheetName
+    );
+
+
+    XLSX.writeFile(
+        workbook,
+        filename
+    );
+
+}
+
+
+/* =========================================
+   1. INCORRECT DETAILS
+========================================= */
+
+function exportIncorrect() {
+
+    const rows = [];
+
+
+    students
+        .filter(
+            student =>
+                student.status
+                ===
+                "corrected"
+        )
+        .forEach(
+            student => {
+
+                student.corrections
+                    .forEach(
+                        correction => {
+
+                            rows.push({
+
+                                "Student ID":
+                                    student.values.id,
+
+                                "Student Name":
+                                    student.values.name,
+
+                                "Grade":
+                                    student.values.grade,
+
+                                "Section":
+                                    student.values.section,
+
+                                "Field":
+                                    fieldDisplayName(
+                                        correction.field
+                                    ),
+
+                                "Original Detail":
+                                    correction.original,
+
+                                "Corrected Detail":
+                                    correction.corrected
+
+                            });
+
+                        }
+                    );
+
+            }
+        );
+
+
+    if (!rows.length) {
+
+        alert(
+            "No incorrect details have been recorded yet."
+        );
+
+        return;
+
+    }
+
+
+    downloadExcel(
+        "Incorrect_Details.xlsx",
+        rows,
+        "Incorrect Details"
+    );
+
+}
+
+
+/* =========================================
+   2. CORRECTED STUDENTS ONLY
+========================================= */
+
+function exportCorrected() {
+
+    const rows =
+        students
+            .filter(
+                student =>
+                    student.status
+                    ===
+                    "corrected"
+            )
+            .map(
+                student =>
+                    finalStudentRecord(
+                        student
+                    )
+            );
+
+
+    if (!rows.length) {
+
+        alert(
+            "No corrected students found."
+        );
+
+        return;
+
+    }
+
+
+    downloadExcel(
+        "Corrected_Students.xlsx",
+        rows,
+        "Corrected Students"
+    );
+
+}
+
+
+/* =========================================
+   3. COMPLETE VERIFIED LIST
+========================================= */
+
+function exportComplete() {
+
+    const unchecked =
+        students.filter(
+            student =>
+                student.status
+                ===
+                "unchecked"
+        );
+
+
+    if (
+        unchecked.length
+        > 0
+    ) {
+
+        const proceed =
+            confirm(
+                `${unchecked.length} student(s) have not been checked yet.\n\nDo you still want to generate the complete list?`
+            );
+
+
+        if (!proceed) {
+            return;
+        }
+
+    }
+
+
+    /*
+       Correct/Corrected students:
+       use verified values.
+
+       Unchecked students:
+       retain original values because
+       they have not yet been changed.
+    */
+
+    const rows =
+        students.map(
+            student =>
+                finalStudentRecord(
+                    student
+                )
+        );
+
+
+    downloadExcel(
+        "Complete_Verified_Student_List.xlsx",
+        rows,
+        "Complete Verified List"
+    );
+
+}
+
+
+/* =========================================
+   4. PROGRESS
+========================================= */
+
+function exportProgress() {
+
+    const rows =
+        students.map(
+            student => ({
+
+                "Student ID":
+                    student.values.id,
+
+                "Student Name":
+                    student.values.name,
+
+                "Grade":
+                    student.values.grade,
+
+                "Section":
+                    student.values.section,
+
+                "Status":
+                    student.status === "unchecked"
+                    ?
+                    "Not Checked"
+                    :
+                    student.status === "correct"
+                    ?
+                    "Correct"
+                    :
+                    "Corrected"
+
+            })
+        );
+
+
+    downloadExcel(
+        "Checking_Progress.xlsx",
+        rows,
+        "Checking Progress"
+    );
+
+}
+
+
+/* =========================================
+   FIELD DISPLAY NAMES
+========================================= */
+
+function fieldDisplayName(
+    field
+) {
+
+    const names = {
+
+        name:
+            "Student Name",
+
+        guardian:
+            "Guardian Name",
+
+        contact:
+            "Student Contact",
+
+        guardianContact:
+            "Guardian Contact",
+
+        address:
+            "Student Address",
+
+        guardianAddress:
+            "Guardian Address",
+
+        dob:
+            "Date of Birth",
+
+        gender:
+            "Gender",
+
+        grade:
+            "Grade",
+
+        section:
+            "Section"
+
+    };
+
+
+    return (
+        names[field]
+        ||
+        field
+    );
+
+}
+
+
+/* =========================================
+   MESSAGE
+========================================= */
+
+function showMessage(
+    message
+) {
+
+    const box =
+        document.getElementById(
+            "loadMessage"
+        );
+
+
+    box.textContent =
+        message;
+
+
+    box.classList.remove(
+        "hidden"
+    );
+
+}
+
+</script>
+
+</body>
+</html>
